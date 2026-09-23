@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Return Dashboard — TDFB</title>
+<style>
+:root{--paper:#F7F6F1;--ink:#1C2119;--matcha:#4F7A3F;--matcha-d:#3A5C2E;--clay:#B5603A;
+ --tint:#E7EDE0;--line:#D9D8CF;--muted:#6B7266;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+ font-family:"Segoe UI","Noto Sans Thai",system-ui,sans-serif;font-size:15px;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:26px 20px 70px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+h1{font-size:21px;font-weight:650;margin:0 0 2px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+.btn{font:inherit;font-size:13.5px;font-weight:550;border:1px solid var(--line);background:#fff;
+ color:var(--matcha-d);border-radius:9px;padding:9px 16px;cursor:pointer}
+.btn:hover{background:var(--tint);border-color:var(--matcha)}
+.btn:disabled{opacity:.55;cursor:default}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+h2{font-size:15px;font-weight:600;margin:0 0 3px}
+h3{font-size:13.5px;font-weight:600;margin:0 0 8px;text-align:center}
+.note{color:var(--muted);font-size:12.5px;line-height:1.6;margin:3px 0 0}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.f label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+.f input,.f select{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);
+ border-radius:8px;background:var(--paper);color:var(--ink)}
+.f input:focus,.f select:focus{outline:2px solid var(--matcha);outline-offset:-1px;border-color:transparent}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.chip{font:inherit;font-size:12.5px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);
+ background:var(--paper);color:var(--muted);cursor:pointer}
+.chip:hover{border-color:var(--matcha)}
+.chip.on{background:var(--matcha);border-color:var(--matcha);color:#fff;font-weight:550}
+.hint{font-size:12.5px;color:var(--muted);margin-top:9px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+.kpi b{display:block;font-size:26px;font-weight:660;letter-spacing:-.02em;line-height:1.1}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.legend{display:flex;flex-wrap:wrap;gap:13px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.bar{display:flex;height:26px;border-radius:7px;overflow:hidden;margin:10px 0 8px}
+.bar div{display:flex;align-items:center;justify-content:center;font-size:11.5px;color:#fff;font-weight:550}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:550;font-size:12.5px}
+td.hi{font-weight:650}
+.pbar{height:7px;border-radius:4px;background:var(--tint);position:relative;min-width:60px}
+.pbar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--matcha)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.donuts{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.donuts svg{width:100%;height:auto;display:block;overflow:visible}
+@media(max-width:760px){.grid2,.donuts{grid-template-columns:1fr}}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:5px;background:var(--tint);color:var(--matcha-d);margin-left:6px}
+.tag.warn{background:#F6E3DA;color:var(--clay)}
+.empty{text-align:center;color:var(--muted);font-size:13.5px;padding:26px 0}
+.scroll{overflow-x:auto}
+</style></head><body><div class="wrap">
+<div class="head">
+  <div><h1>งาน Return</h1><p class="sub"><span id="meta">กำลังโหลด…</span></p></div>
+  <button id="save" class="btn">บันทึกภาพ</button>
+</div>
+
+<div class="panel">
+  <div class="filters">
+    <div class="f"><label for="from">ตั้งแต่วันที่</label><input type="date" id="from"></div>
+    <div class="f"><label for="to">ถึงวันที่</label><input type="date" id="to"></div>
+    <div class="f"><label for="plat">Platform</label><select id="plat"></select></div>
+    <div class="f"><label for="cause">สาเหตุ</label><select id="cause"></select></div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="hint" id="hint"></div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="panel">
+  <div class="donuts">
+    <div><h3>ของออกจากคลังไปแล้วหรือยัง</h3><svg id="d1"></svg></div>
+    <div><h3>แยกตามสาเหตุ</h3><svg id="d2"></svg></div>
+  </div>
+  <div class="scroll">
+  <table id="causetbl"><thead><tr><th>สาเหตุ</th><th>ใบ</th><th>สัดส่วน</th><th>ห่าง (กลาง)</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>สาเหตุมาจาก Platform ไหน</h2>
+  <p class="note">อ่านตามแนวนอน — แต่ละสาเหตุกระจายไปแต่ละช่องทางกี่เปอร์เซ็นต์ · ช่องที่มากสุดของแต่ละแถวเป็นตัวหนา</p>
+  <div class="scroll"><table id="matrix"></table></div>
+</div>
+
+<div class="panel">
+  <h2>แยกตาม Platform</h2>
+  <p class="note">อ่านตามช่องทาง — แต่ละช่องทางมีสาเหตุอะไรบ้าง</p>
+  <div class="legend" id="platleg" style="margin:10px 0 14px"></div>
+  <div id="platwrap"></div>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h2>สินค้าที่ตีกลับบ่อย</h2>
+    <p class="note">ของออกจากคลังไปแล้ว เสียค่าส่งสองเที่ยว</p>
+    <table id="prodret"><thead><tr><th>สินค้า</th><th>ใบ</th><th>ชิ้น</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="panel">
+    <h2>สินค้าที่ยกเลิกในวันบ่อย</h2>
+    <p class="note">จับได้ก่อนของออก ไม่เสียค่าส่ง</p>
+    <table id="prodcan"><thead><tr><th>สินค้า</th><th>ใบ</th><th>ชิ้น</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>แนวโน้มรายสัปดาห์</h2>
+  <p class="note" id="trendnote"></p>
+  <svg id="trend" viewBox="0 0 900 220" style="width:100%;height:220px"></svg>
+  <div class="legend" style="margin-top:8px">
+    <span><i style="background:#C2603C"></i>ตีกลับ (ของออกไปแล้ว)</span>
+    <span><i style="background:#3F8E6E"></i>ยกเลิกในวัน</span>
+  </div>
+</div>
+</div>
+
+<script>
+/* ============================================================
+   ใส่ลิงก์ CSV ของชีตที่เผยแพร่ตรงนี้ (ดูวิธีทำในคู่มือที่แนบมา)
+   ถ้าเว้นว่างไว้ หน้าจะใช้ข้อมูลสำรองที่ฝังในไฟล์แทน
+   ============================================================ */
+const CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vT91y2Hh3wgzuk5AvadFevKYMtzqWsGbgvXoDILmhIfEHDJQCh3c79v81SB-MjYmwjOg-PfkC6R7-sE/pub?gid=902439572&single=true&output=csv';
+
+const SNAPSHOT=[{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-01","w":"36","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-02","w":"36","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกในวัน","g":0,"d":"2026-09-02","w":"36","it":[["Matchazuki M4 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกในวัน","g":8,"d":"2026-09-02","w":"36","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":4,"d":"2026-09-02","w":"36","it":[["Excellent Rich 95% 3.1g x 2 sachets",5]],"q":5},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-02","w":"36","it":[["Matchazuki M3 1 Kg",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-03","w":"36","it":[["Matchazuki M3 1 Kg",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-03","w":"36","it":[["Red Bean 250 g",1],["Matcha M6 100 g",1]],"q":2},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":4,"d":"2026-09-03","w":"36","it":[["Houjicha H1 95% 1 Kg",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-04","w":"36","it":[["Classic Rich 95% 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-04","w":"36","it":[["Matchazuki M4 40 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-05","w":"36","it":[["Sweetened Condensed Milk 200g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":30,"d":"2026-09-06","w":"36","it":[["Ready set 10 sc Classic Rich 95%",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-07","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":3,"d":"2026-09-07","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":5,"d":"2026-09-07","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-07","w":"37","it":[["Matchazuki M4 40 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-07","w":"37","it":[["Sweetened Condensed Milk 200g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกในวัน","g":0,"d":"2026-09-07","w":"37","it":[["Sweetened Condensed Milk 200g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกในวัน","g":0,"d":"2026-09-08","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-08","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":10,"d":"2026-09-08","w":"37","it":[["Matcha Grand Reserve 30 g",1]],"q":1},{"p":"Line OA","c":"ยกเลิกจากผู้ขาย","g":4,"d":"2026-09-08","w":"37","it":[],"q":0},{"p":"Line OA","c":"ยกเลิกจากผู้ขาย","g":null,"d":"2026-09-08","w":"37","it":[],"q":0},{"p":"Line OA","c":"ยกเลิกจากผู้ขาย","g":4,"d":"2026-09-08","w":"37","it":[["Excellent Rich 95% 1 Kg",3]],"q":3},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-08","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":3,"d":"2026-09-08","w":"37","it":[["Imperial 30 g",1]],"q":1},{"p":"Lazada","c":"ยกเลิกจากผู้ซื้อ","g":11,"d":"2026-09-08","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-09","w":"37","it":[["Ceremonial 30 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-09","w":"37","it":[["Red Bean 250 g",3]],"q":3},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-09","w":"37","it":[["Matcha M6 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-09","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-09","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":4,"d":"2026-09-09","w":"37","it":[["Matchazuki M4 100 g",1]],"q":1},{"p":"TikTok Shop","c":"จัดส่งไม่สำเร็จ","g":9,"d":"2026-09-09","w":"37","it":[["Sweetened Condensed Milk 200g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-09","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":2,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Matchazuki M4 100 g",1],["Matchazuki M3 100 g",2]],"q":3},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":3,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-10","w":"37","it":[["Excellent 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Classic Rich 95% 100 g",3],["Stainless Canister (S)",1]],"q":4},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-10","w":"37","it":[["Matchazuki M4 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Excellent 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-10","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":1,"d":"2026-09-11","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":7,"d":"2026-09-11","w":"37","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":8,"d":"2026-09-11","w":"37","it":[["Matchazuki M4 40 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-11","w":"37","it":[["Sweetened Condensed Milk 200g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกในวัน","g":1,"d":"2026-09-11","w":"37","it":[["Coconut Matcha Box Set",1]],"q":1},{"p":"Lazada","c":"ยกเลิกจากผู้ซื้อ","g":10,"d":"2026-09-12","w":"37","it":[["Chasen",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":8,"d":"2026-09-13","w":"37","it":[["Matchazuki M4 1 Kg",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":4,"d":"2026-09-13","w":"37","it":[["Matchazuki M4 40 g",1]],"q":1},{"p":"Shopee","c":"จัดส่งไม่สำเร็จ","g":2,"d":"2026-09-14","w":"38","it":[["Matchazuki M3 40 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-14","w":"38","it":[["Matchazuki M4 1 Kg",1]],"q":1},{"p":"TikTok Shop","c":"จัดส่งไม่สำเร็จ","g":5,"d":"2026-09-14","w":"38","it":[["Matchazuki M4 40 g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":2,"d":"2026-09-15","w":"38","it":[["Sweetened Condensed Milk 200g",1]],"q":1},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":8,"d":"2026-09-15","w":"38","it":[["Sweetened Condensed Milk 200g",1]],"q":1},{"p":"TikTok Shop","c":"จัดส่งไม่สำเร็จ","g":8,"d":"2026-09-15","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-15","w":"38","it":[["Imperial 30 g",1],["Ceremonial 30 g",1],["Matchazuki M3 3.1g (1 sachet)",1],["Matchazuki M4 3.1g (1 sachet)",1]],"q":4},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-15","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-15","w":"38","it":[["Sifter (New)",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-15","w":"38","it":[["Matchazuki M3 3.1g (1 sachet)",7]],"q":7},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-15","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-15","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":7,"d":"2026-09-16","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Line OA","c":"ไม่ระบุ","g":null,"d":"2026-09-16","w":"38","it":[],"q":0},{"p":"TikTok Shop","c":"ยกเลิกจากผู้ซื้อ","g":6,"d":"2026-09-16","w":"38","it":[["Matchazuki M4 100 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":0,"d":"2026-09-16","w":"38","it":[["Ready set 10 sc Classic Rich 95%",1],["Matchazuki M3 3.1g (1 sachet)",2]],"q":3},{"p":"Shopee","c":"จัดส่งไม่สำเร็จ","g":1,"d":"2026-09-16","w":"38","it":[["Ceremonial 30 g",1]],"q":1},{"p":"TikTok Shop","c":"จัดส่งไม่สำเร็จ","g":8,"d":"2026-09-17","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"จัดส่งไม่สำเร็จ","g":3,"d":"2026-09-17","w":"38","it":[["B-Chasen",3],["B-Chasen Holder (Black) Ver.01",1]],"q":4},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-17","w":"38","it":[["Excellent 100 g",1]],"q":1},{"p":"Lazada","c":"จัดส่งไม่สำเร็จ","g":7,"d":"2026-09-17","w":"38","it":[],"q":0},{"p":"Lazada","c":"จัดส่งไม่สำเร็จ","g":7,"d":"2026-09-17","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"TikTok Shop","c":"สินค้าสูญหาย","g":33,"d":"2026-09-18","w":"38","it":[["Matcha Grand Reserve 30 g",1]],"q":1},{"p":"Shopee","c":"ยกเลิกในวัน","g":0,"d":"2026-09-18","w":"38","it":[["Matchazuki M4 3.1g (1 sachet)",5]],"q":5},{"p":"Shopee","c":"ยกเลิกจากผู้ซื้อ","g":0,"d":"2026-09-18","w":"38","it":[["Matchazuki M3 100 g",1]],"q":1},{"p":"Shopee","c":"จัดส่งไม่สำเร็จ","g":1,"d":"2026-09-18","w":"38","it":[["Matchazuki M3 100 g",1],["Matchazuki M4 3.1g (1 sachet)",1]],"q":2},{"p":"Lazada","c":"จัดส่งไม่สำเร็จ","g":12,"d":"2026-09-18","w":"38","it":[["Matchazuki M4 40 g",1]],"q":1}];
+const CANCEL='ยกเลิกในวัน';
+const COLORS={'ยกเลิกในวัน':'#3F8E6E','ยกเลิกจากผู้ซื้อ':'#C2603C','จัดส่งไม่สำเร็จ':'#D4A32C',
+ 'ยกเลิกจากผู้ขาย':'#5B6BA8','สินค้าสูญหาย':'#8E4B8B'};
+const shipped=r=>r.c!==CANCEL;
+const med=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=(b.length-1)/2;
+ return b.length%2?b[i]:Math.round((b[i-.5]+b[i+.5])/2);};
+const pct=(n,t)=>t?(n/t*100):0;
+const el=id=>document.getElementById(id);
+
+let RAW=SNAPSHOT, ALL=[], MIN='', MAX='', LIVE=false;
+
+/* ---------- อ่าน CSV (รองรับช่องที่มีจุลภาคอยู่ข้างใน) ---------- */
+function parseCSV(text){
+  const rows=[]; let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===','){ row.push(f); f=''; }
+    else if(ch==='\n'){ row.push(f); rows.push(row); row=[]; f=''; }
+    else if(ch!=='\r') f+=ch;
+  }
+  if(f.length||row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r=>r.some(c=>c.trim()));
+}
+function fromSheet(text){
+  const rows=parseCSV(text);
+  if(!rows.length) throw new Error('ไฟล์ว่าง');
+  const h=rows[0].map(x=>x.trim());
+  const col=n=>h.indexOf(n);
+  const iP=col('Platform'), iC=col('สาเหตุ'), iG=col('ห่างกี่วัน'),
+        iD=col('วันที่ได้รับสินค้า'), iW=col('Week'), iPr=col('Product'), iQ=col('QTY');
+  if(iC<0||iD<0) throw new Error('ไม่พบคอลัมน์ที่ต้องใช้');
+  return rows.slice(1).map(r=>{
+    const g=(r[iG]||'').trim();
+    const items=[];
+    (r[iPr]||'').split(',').forEach(p=>{
+      p=p.trim(); if(!p) return;
+      const m=p.match(/^(.*?)\s+(\d+)\s*ชิ้น$/);
+      items.push(m?[m[1].trim(),+m[2]]:[p,0]);
+    });
+    return {p:(r[iP]||'').trim(), c:(r[iC]||'').trim(), d:(r[iD]||'').trim(),
+            w:(r[iW]||'').trim(), it:items,
+            g:/^-?\d+$/.test(g)?+g:null, q:+(r[iQ]||0)||0};
+  }).filter(r=>r.d);
+}
+
+/* ---------- โดนัทหนึ่งวง ---------- */
+function donut(svgId,parts,total){
+  const show=parts.filter(p=>p[1]>0);
+  const W=300, cx=150, cy=108, R=88, IN=56;
+  const legendTop=cy+R+30;                       // เริ่มใต้ขอบวงเสมอ
+  const H=legendTop+show.length*19;
+  const svg=el(svgId);
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  if(!total){ svg.innerHTML='<text x="150" y="110" text-anchor="middle" font-size="13" fill="#6B7266">ไม่มีข้อมูล</text>'; return; }
+  const P=(r,a)=>[cx+r*Math.sin(a),cy-r*Math.cos(a)];
+  const arc=(r0,r1,a0,a1,fill)=>{
+    if(a1-a0<=0.0001) return '';
+    const big=(a1-a0)>Math.PI?1:0;
+    const [x1,y1]=P(r1,a0),[x2,y2]=P(r1,a1),[x3,y3]=P(r0,a1),[x4,y4]=P(r0,a0);
+    return '<path d="M'+x1+' '+y1+'A'+r1+' '+r1+' 0 '+big+' 1 '+x2+' '+y2+'L'+x3+' '+y3
+      +'A'+r0+' '+r0+' 0 '+big+' 0 '+x4+' '+y4+'Z" fill="'+fill+'" stroke="#fff" stroke-width="1.5"/>';};
+  let out='',ang=0;
+  show.forEach(([,n,col])=>{
+    const a2=ang+n/total*2*Math.PI;
+    out+=arc(IN,R,ang,a2,col);
+    const share=n/total*100;
+    if(share>=11){
+      const mid=(ang+a2)/2,[tx,ty]=P((IN+R)/2,mid);
+      out+='<text x="'+tx+'" y="'+(ty+4)+'" text-anchor="middle" font-size="12.5" font-weight="650" fill="#fff">'
+        +share.toFixed(0)+'%</text>';}
+    ang=a2;});
+  out+='<text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" font-size="26" font-weight="660">'+total+'</text>';
+  out+='<text x="'+cx+'" y="'+(cy+19)+'" text-anchor="middle" font-size="10.5" fill="#6B7266">ใบ</text>';
+  let y=legendTop;
+  show.forEach(([nm,n,col])=>{
+    out+='<rect x="10" y="'+(y-9)+'" width="11" height="11" rx="3" fill="'+col+'"/>'
+       +'<text x="28" y="'+y+'" font-size="12">'+nm+'</text>'
+       +'<text x="'+(W-10)+'" y="'+y+'" font-size="12" text-anchor="end" fill="#6B7266">'+n+' · '+pct(n,total).toFixed(0)+'%</text>';
+    y+=19;});
+  svg.innerHTML=out;
+}
+
+function prodTable(D,filter,sel){
+  const m={};
+  D.filter(filter).forEach(r=>r.it.forEach(([n,q])=>{(m[n]??={d:0,q:0});m[n].d++;m[n].q+=q;}));
+  const arr=Object.entries(m).sort((a,b)=>b[1].d-a[1].d).slice(0,8);
+  const max=arr.length?arr[0][1].d:1;
+  document.querySelector(sel+' tbody').innerHTML=arr.map(([n,v])=>
+   '<tr><td>'+n+'<div class="pbar" style="margin-top:4px"><i style="width:'+(v.d/max*100)+'%"></i></div></td>'
+   +'<td>'+v.d+'</td><td>'+v.q+'</td></tr>').join('')||'<tr><td colspan="3" class="note">ไม่มีข้อมูลในช่วงนี้</td></tr>';
+}
+
+function trend(D){
+  const wk={}; D.forEach(r=>{const k=r.w||'?';(wk[k]??={s:0,c:0});shipped(r)?wk[k].s++:wk[k].c++;});
+  const ks=Object.keys(wk).sort((a,b)=>a-b);
+  if(!ks.length){el('trend').innerHTML='<text x="450" y="110" text-anchor="middle" font-size="14" fill="#6B7266">ไม่มีข้อมูลในช่วงนี้</text>';el('trendnote').textContent='';return;}
+  const max=Math.max(...ks.map(k=>wk[k].s+wk[k].c))*1.15||1;
+  const W=900,H=220,P=34,bw=Math.min(90,(W-P*2)/ks.length*0.6);
+  const x=i=>P+(W-P*2)*(i+0.5)/ks.length, y=v=>H-30-(H-56)*v/max;
+  let s='';
+  [0,Math.round(max/2),Math.round(max)].forEach(v=>{
+    s+='<line x1="'+P+'" y1="'+y(v)+'" x2="'+(W-P)+'" y2="'+y(v)+'" stroke="#D9D8CF"/>'
+      +'<text x="4" y="'+(y(v)+4)+'" font-size="11" fill="#6B7266">'+v+'</text>';});
+  ks.forEach((k,i)=>{const o=wk[k],t=o.s+o.c;
+    s+='<rect x="'+(x(i)-bw/2)+'" y="'+y(o.c)+'" width="'+bw+'" height="'+Math.max(0,y(0)-y(o.c))+'" fill="#3F8E6E" rx="3"/>';
+    s+='<rect x="'+(x(i)-bw/2)+'" y="'+y(t)+'" width="'+bw+'" height="'+Math.max(0,y(o.c)-y(t))+'" fill="#C2603C" rx="3"/>';
+    s+='<text x="'+x(i)+'" y="'+(y(t)-7)+'" font-size="12" font-weight="600" text-anchor="middle">'+t+'</text>';
+    s+='<text x="'+x(i)+'" y="'+(H-10)+'" font-size="11.5" text-anchor="middle" fill="#6B7266">สัปดาห์ '+k+'</text>';});
+  el('trend').innerHTML=s;
+  el('trendnote').textContent=ks.length<6?'ข้อมูลยังมี '+ks.length+' สัปดาห์ ต้องสะสมอีกสักระยะถึงจะอ่านแนวโน้มได้จริง':'';
+}
+
+const current=()=>{const f=el('from').value,t=el('to').value,p=el('plat').value,c=el('cause').value;
+  return ALL.filter(r=>(!f||r.d>=f)&&(!t||r.d<=t)&&(!p||r.p===p)&&(!c||r.c===c));};
+
+function render(){
+  const D=current();
+  const skipped=RAW.length-ALL.length;
+  el('meta').textContent=(LIVE?'ข้อมูลสดจากชีต':'ข้อมูลสำรองในไฟล์')+' · '+ALL.length+' ใบ · '+MIN+' ถึง '+MAX
+    +(skipped?' · ไม่นับอีก '+skipped+' ใบที่ยังไม่ได้ระบุสาเหตุใน Odoo':'');
+  el('hint').textContent='กำลังแสดง '+D.length+' ใบ จาก '+ALL.length+' ใบ';
+
+  const nShip=D.filter(shipped).length, nCan=D.length-nShip;
+  el('kpis').innerHTML=[
+   '<b>'+D.length+'</b><span>ใบในช่วงที่เลือก</span>',
+   '<b>'+nShip+'</b><span>ตีกลับ (ของออกไปแล้ว)</span><small>'+pct(nShip,D.length).toFixed(0)+'% ของที่แสดง</small>',
+   '<b>'+nCan+'</b><span>ยกเลิกก่อนของออก</span><small>'+pct(nCan,D.length).toFixed(0)+'% ไม่เสียค่าส่ง</small>',
+  ].map(x=>'<div class="kpi">'+x+'</div>').join('');
+
+  donut('d1',[['ของออกไปแล้ว',nShip,'#C2603C'],['ยกเลิกก่อนของออก',nCan,'#3F8E6E']],D.length);
+  const cs={}; D.forEach(r=>(cs[r.c]??=[]).push(r));
+  const causes=Object.entries(cs).sort((a,b)=>b[1].length-a[1].length);
+  donut('d2',causes.map(([c,rs])=>[c,rs.length,COLORS[c]||'#A8A79E']),D.length);
+
+  document.querySelector('#causetbl tbody').innerHTML=causes.map(([c,rs])=>{
+    const m=med(rs.filter(r=>r.g!=null).map(r=>r.g));
+    return '<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;background:'
+     +(COLORS[c]||'#A8A79E')+'"></i>'+c+'</td><td>'+rs.length+'</td><td>'+pct(rs.length,D.length).toFixed(1)
+     +'%</td><td>'+(m==null?'—':m)+'</td></tr>';}).join('')
+   ||'<tr><td colspan="4" class="note">ไม่มีข้อมูลในช่วงนี้</td></tr>';
+
+  const plats=[...new Set(D.map(r=>r.p||'ไม่ระบุ'))]
+    .sort((a,b)=>D.filter(r=>(r.p||'ไม่ระบุ')===b).length-D.filter(r=>(r.p||'ไม่ระบุ')===a).length);
+  const th='<thead><tr><th>สาเหตุ</th>'+plats.map(p=>'<th>'+p+'</th>').join('')+'<th>รวม</th></tr></thead>';
+  const tb=causes.map(([c,rs])=>{
+    const pc={}; rs.forEach(r=>pc[r.p||'ไม่ระบุ']=(pc[r.p||'ไม่ระบุ']||0)+1);
+    const top=Math.max(...plats.map(p=>pc[p]||0));
+    return '<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;background:'
+      +(COLORS[c]||'#A8A79E')+'"></i>'+c+'</td>'
+      +plats.map(p=>{const n=pc[p]||0;
+        return '<td class="'+(n&&n===top?'hi':'')+'">'+(n?pct(n,rs.length).toFixed(0)+'%<span style="color:var(--muted);font-weight:400"> ('+n+')</span>':'—')+'</td>';}).join('')
+      +'<td>'+rs.length+'</td></tr>';}).join('');
+  el('matrix').innerHTML=causes.length?th+'<tbody>'+tb+'</tbody>':'<tbody><tr><td class="note">ไม่มีข้อมูลในช่วงนี้</td></tr></tbody>';
+
+  el('platleg').innerHTML=[...new Set(D.map(r=>r.c))].map(c=>
+    '<span><i style="background:'+(COLORS[c]||'#A8A79E')+'"></i>'+c+'</span>').join('');
+  const bp={}; D.forEach(r=>(bp[r.p||'ไม่ระบุ']??=[]).push(r));
+  el('platwrap').innerHTML=Object.entries(bp).sort((a,b)=>b[1].length-a[1].length).map(([p,rs])=>{
+    const c={}; rs.forEach(r=>c[r.c]=(c[r.c]||0)+1);
+    const ord=Object.entries(c).sort((a,b)=>b[1]-a[1]);
+    const sh=rs.filter(shipped).length;
+    return '<div style="margin-bottom:14px">'
+     +'<div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:550">'
+     +'<span>'+p+'</span><span style="color:var(--muted);font-weight:400">'+rs.length+' ใบ · ของออกไปแล้ว '
+     +pct(sh,rs.length).toFixed(0)+'%'+(pct(sh,rs.length)>55?'<span class="tag warn">สูง</span>':'')+'</span></div>'
+     +'<div class="bar" style="height:22px;margin:6px 0 4px">'
+     +ord.map(([cc,n])=>{const w=pct(n,rs.length);
+       return '<div style="width:'+w+'%;background:'+(COLORS[cc]||'#A8A79E')+'" title="'+cc+' '+n+' ใบ">'+(w>14?n:'')+'</div>';}).join('')
+     +'</div><div class="note">'+ord.map(([cc,n])=>cc+' '+pct(n,rs.length).toFixed(0)+'%').join(' · ')+'</div></div>';
+  }).join('')||'<div class="empty">ไม่มีข้อมูลในช่วงนี้</div>';
+
+  prodTable(D,shipped,'#prodret');
+  prodTable(D,r=>!shipped(r),'#prodcan');
+  trend(D);
+}
+
+function setup(){
+  ALL=RAW.filter(r=>r.c&&r.c!=='ไม่ระบุ');
+  const ds=ALL.map(r=>r.d).filter(Boolean).sort();
+  MIN=ds[0]||''; MAX=ds[ds.length-1]||'';
+  el('from').value=MIN; el('to').value=MAX;
+  el('from').min=MIN; el('from').max=MAX; el('to').min=MIN; el('to').max=MAX;
+  const uniq=k=>[...new Set(ALL.map(r=>r[k]).filter(Boolean))].sort();
+  el('plat').innerHTML='<option value="">ทุก Platform</option>'+uniq('p').map(v=>'<option>'+v+'</option>').join('');
+  el('cause').innerHTML='<option value="">ทุกสาเหตุ</option>'+uniq('c').map(v=>'<option>'+v+'</option>').join('');
+  render();
+}
+
+const PRESETS=[['ทั้งหมด',null],['7 วันล่าสุด',7],['30 วันล่าสุด',30],['เดือนนี้','m']];
+el('chips').innerHTML=PRESETS.map((p,i)=>'<button class="chip'+(i===0?' on':'')+'" data-i="'+i+'">'+p[0]+'</button>').join('');
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  const v=PRESETS[+b.dataset.i][1], end=new Date(MAX+'T00:00:00Z');
+  if(v===null) el('from').value=MIN;
+  else if(v==='m') el('from').value=MAX.slice(0,8)+'01';
+  else el('from').value=new Date(end.getTime()-(v-1)*864e5).toISOString().slice(0,10);
+  el('to').value=MAX; render();});
+['from','to','plat','cause'].forEach(id=>el(id).addEventListener('input',()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); render();}));
+
+(async function boot(){
+  setup();                                   // วาดด้วยข้อมูลสำรองก่อน หน้าจะได้ไม่ว่าง
+  if(!CSV_URL) return;
+  try{
+    const ctl=new AbortController(); const to=setTimeout(()=>ctl.abort(),10000);
+    const res=await fetch(CSV_URL,{cache:'no-store',signal:ctl.signal});
+    clearTimeout(to);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rows=fromSheet(await res.text());
+    if(rows.length<3) throw new Error('ข้อมูลน้อยผิดปกติ');
+    RAW=rows; LIVE=true; setup();
+  }catch(e){ console.warn('ดึงข้อมูลสดไม่ได้ ใช้ข้อมูลสำรองในไฟล์:',e.message); }
+})();
+
+el('save').onclick=async function(){
+  const b=this, old=b.textContent;
+  b.disabled=true; b.textContent='กำลังสร้างภาพ...';
+  try{
+    if(!window.html2canvas){
+      await new Promise((ok,err)=>{const sc=document.createElement('script');
+        sc.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        sc.onload=ok; sc.onerror=()=>err(new Error('โหลดไม่ได้')); document.head.appendChild(sc);});
+    }
+    b.style.visibility='hidden';
+    const cv=await html2canvas(document.querySelector('.wrap'),{backgroundColor:'#F7F6F1',scale:2});
+    b.style.visibility='visible';
+    const a=document.createElement('a');
+    a.download='return-dashboard-'+el('from').value+'_'+el('to').value+'.png';
+    a.href=cv.toDataURL('image/png'); a.click();
+  }catch(e){
+    b.style.visibility='visible';
+    alert('บันทึกภาพไม่ได้ ('+e.message+')\nถ้าไม่ได้ต่ออินเทอร์เน็ต ให้ใช้การจับภาพหน้าจอแทน');
+  }
+  b.disabled=false; b.textContent=old;
+};
+</script></body></html>
